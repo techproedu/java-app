@@ -9,7 +9,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'eagle79/java-app:java-maven-${BUILD_NUMBER}'
     }
-    stages {
+    /* stages {
         stage('test') {
             steps {
                 script {
@@ -25,7 +25,7 @@ pipeline {
                     sh 'mvn package'
                 }
             }
-        }
+        } */
 
         stage('build image') {
             steps {
