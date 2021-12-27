@@ -61,7 +61,7 @@ pipeline {
                    echo 'deploying docker image to EC2...'
                    echo "${EC2_PUBLIC_IP}"
                    def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
-                   sh "echo IMAGE=${IMAGE_NAME} /.env"
+                   sh "echo 'IMAGE=${IMAGE_NAME}' > /.env"
                    withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                         sshagent(['ssh-my-key']) {
                             sh "scp -o StrictHostKeyChecking=no ./.env ec2-user@${EC2_PUBLIC_IP}:/home/ec2-user" 
