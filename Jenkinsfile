@@ -3,20 +3,18 @@
 pipeline {
     agent any
     tools {
-        maven 'Maven'
+        maven 'maven'
         teraform 'tf'
     }
     environment {
         IMAGE_NAME = 'eagle79/java-app:java-maven-${BUILD_NUMBER}'
     }
     stages {
-
         stage('test') {
             steps {
                 script {
                     echo "test the application"
                     sh 'mvn test'
-
                 }
             }
         }
@@ -25,7 +23,6 @@ pipeline {
                 script {
                     echo "building the application jar"
                     sh 'mvn package'
-
                 }
             }
         }
@@ -42,7 +39,6 @@ pipeline {
                 }
             }
         }
-
         stage('provision server') {
            steps {
                 script {
@@ -57,14 +53,10 @@ pipeline {
             }
         }
         stage('deploy') {
-            environment {
-                DOCKER_CREDS = credentials('docker-hub-repo')
-            }
             steps {
                 script {
                    echo "waiting for EC2 server to initialize" 
                    sleep(time: 90, unit: "SECONDS") 
-
                    echo 'deploying docker image to EC2...'
                    echo "${EC2_PUBLIC_IP}"
                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
