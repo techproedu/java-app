@@ -1,11 +1,11 @@
-terraform {
+/* terraform {
     required_version = ">= 0.12"
     backend "s3" {
         bucket = "myapp-bucket"
         key = "myapp/state.tfstate"
         region = "eu-west-3"
     }
-}
+} */
 
 provider "aws" {
     region = var.region
@@ -98,7 +98,7 @@ resource "aws_instance" "myapp-server" {
     availability_zone = var.avail_zone
 
     associate_public_ip_address = true
-    key_name = "myapp-key-pair"
+    key_name = "mykey"
 
     user_data = file("entry-script.sh")
 

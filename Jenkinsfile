@@ -1,54 +1,57 @@
 #!/usr/bin/env groovy
 
-library identifier: 'jenkins-shared-library@master', retriever: modernSCM(
-    [$class: 'GitSCMSource',
-     remote: 'https://gitlab.com/nanuchi/jenkins-shared-library.git',
-     credentialsId: 'gitlab-credentials'
-    ]
-)
-
 pipeline {
     agent any
     tools {
         maven 'Maven'
+        teraform 'tf'
     }
     environment {
-        IMAGE_NAME = 'nanajanashia/demo-app:java-maven-2.0'
+        IMAGE_NAME = 'eagle79/java-app:java-maven-${BUILD_NUMBER}'
     }
     stages {
-        stage('build app') {
-            steps {
-               script {
-                  echo 'building application jar...'
-                  buildJar()
-               }
-            }
-        }
-        stage('build image') {
+
+        stage('test') {
             steps {
                 script {
-                   echo 'building docker image...'
-                   buildImage(env.IMAGE_NAME)
-                   dockerLogin()
-                   dockerPush(env.IMAGE_NAME)
+                    echo "test the application"
+                    sh 'mvn test'
+
                 }
             }
         }
-        stage('provision server') {
-            environment {
-                AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
-                AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
-                TF_VAR_env_prefix = 'test'
-            }
+        stage('build jar') {
             steps {
                 script {
+                    echo "building the application jar"
+                    sh 'mvn package'
+
+                }
+            }
+        }
+
+        stage('build image') {
+            steps {
+                script {
+                    echo "building the docker image"
+                     withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sh 'docker build -t env.IMAGE_NAME  .'
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh 'docker push env.IMAGE_NAME'
+                    }
+                }
+            }
+        }
+
+        stage('provision server') {
+           steps {
+                script {
                     dir('terraform') {
-                        sh "terraform init"
-                        sh "terraform apply --auto-approve"
-                        EC2_PUBLIC_IP = sh(
-                            script: "terraform output ec2_public_ip",
-                            returnStdout: true
-                        ).trim()
+                        withCredentials([<object of type com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentialsBinding>]) {
+                            sh "terraform init"
+                            sh "terraform apply --auto-approve"
+                            EC2_PUBLIC_IP = sh(script: "terraform output ec2_public_ip",returnStdout: true).trim()
+                        }
                     }
                 }
             }
@@ -64,14 +67,12 @@ pipeline {
 
                    echo 'deploying docker image to EC2...'
                    echo "${EC2_PUBLIC_IP}"
-
-                   def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME} ${DOCKER_CREDS_USR} ${DOCKER_CREDS_PSW}"
-                   def ec2Instance = "ec2-user@${EC2_PUBLIC_IP}"
-
-                   sshagent(['server-ssh-key']) {
-                       sh "scp -o StrictHostKeyChecking=no server-cmds.sh ${ec2Instance}:/home/ec2-user"
-                       sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ${ec2Instance}:/home/ec2-user"
-                       sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
+                   withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sshagent(['ssh-my-key']) {
+                            sh "scp -o StrictHostKeyChecking=no server-cmds.sh ec2-user@${EC2_PUBLIC_IP}:/home/ec2-user"
+                            sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ec2-user@${EC2_PUBLIC_IP}:/home/ec2-user"
+                            sh "ssh -o StrictHostKeyChecking=no ec2-user@${EC2_PUBLIC_IP} echo $PASS | docker login -u $USER --password-stdin && docker-compose -f docker-compose.yaml up --detach"
+                        }
                    }
                 }
             }
