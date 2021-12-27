@@ -4,7 +4,7 @@ pipeline {
     agent any
     tools {
         maven 'maven'
-        teraform 'tf'
+        terraform 'tf'
     }
     environment {
         IMAGE_NAME = 'eagle79/java-app:java-maven-${BUILD_NUMBER}'
