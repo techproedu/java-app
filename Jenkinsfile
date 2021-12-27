@@ -44,7 +44,7 @@ pipeline {
            steps {
                 script {
                     dir('terraform') {
-                        withAWS(credentials: 'AWS-ID') {
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',credentialsId: "AWS-ID",accessKeyVariable: 'AWS_ACCESS_KEY_ID',secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                             sh "terraform init"
                             sh "terraform apply --auto-approve"
                             EC2_PUBLIC_IP = sh(script: "terraform output ec2_public_ip",returnStdout: true).trim()
