@@ -57,14 +57,14 @@ pipeline {
             steps {
                 script {
                    echo "waiting for EC2 server to initialize" 
-                   sleep(time: 120, unit: "SECONDS") 
+                   sleep(time: 90, unit: "SECONDS") 
                    echo 'deploying docker image to EC2...'
                    echo "${EC2_PUBLIC_IP}"
                    def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
                   
                    withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                         sshagent(['ssh-my-key']) {
-                            /* sh "scp -o StrictHostKeyChecking=no server-cmds.sh ec2-user@${EC2_PUBLIC_IP}:/home/ec2-user"  */
+                            sh "scp -o StrictHostKeyChecking=no server-cmds.sh ec2-user@${EC2_PUBLIC_IP}:/home/ec2-user" 
                             sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ec2-user@${EC2_PUBLIC_IP}:/home/ec2-user"
                             sh "ssh -o StrictHostKeyChecking=no ec2-user@${EC2_PUBLIC_IP} ${shellCmd} && echo $PASS | docker login -u $USER --password-stdin && docker-compose  up --detach"
                         }
