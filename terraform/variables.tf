@@ -10,9 +10,6 @@ variable avail_zone {
 variable env_prefix {
     default = "dev"
 }
-variable my_ip {}
-
-variable jenkins_ip {}
 
 variable instance_type {
     default = "t2.micro"
