@@ -43,7 +43,7 @@ pipeline {
            steps {
                 script {
                     dir('terraform') {
-                        withCredentials([<object of type com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentialsBinding>]) {
+                        withAWS(credentials: 'AWS-ID') {
                             sh "terraform init"
                             sh "terraform apply --auto-approve"
                             EC2_PUBLIC_IP = sh(script: "terraform output ec2_public_ip",returnStdout: true).trim()
