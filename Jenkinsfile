@@ -62,7 +62,7 @@ pipeline {
                    echo "${EC2_PUBLIC_IP}"
                    /* def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
                    sh "echo 'IMAGE=${IMAGE_NAME}' > .env" */
-                   sh "sed -i 's/IMAGE/${IMAGE_NAME}/g' docker-compose.yaml"
+                   sh "sed -i 's/IMAGE/"${IMAGE_NAME}"/g' docker-compose.yaml"
                    withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                         sshagent(['ssh-my-key']) {
                             /* sh "scp -o StrictHostKeyChecking=no ./.env ec2-user@${EC2_PUBLIC_IP}:/home/ec2-user"  */
