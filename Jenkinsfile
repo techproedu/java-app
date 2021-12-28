@@ -62,7 +62,7 @@ pipeline {
                    echo "${EC2_PUBLIC_IP}"
                    /* def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
                    sh "echo 'IMAGE=${IMAGE_NAME}' > .env" */
-                   def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME} ${USER} ${PASS}"
+                   def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
                    def ec2Instance = "ec2-user@${EC2_PUBLIC_IP}"
 
 
